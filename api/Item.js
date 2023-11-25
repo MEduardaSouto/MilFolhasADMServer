@@ -1,5 +1,5 @@
 class Item {
-  constructor(id, name, listId, isChecked) {
+  constructor(id, name, value, listId, isChecked) {
     this.id = id;
     this.name = name;
     this.value = value;
