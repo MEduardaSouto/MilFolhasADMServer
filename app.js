@@ -2,14 +2,16 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const cors = require('cors');
 const client = require('./db');
+const multer = require('multer');
 const List = require('./api/List');
 const Item = require('./api/Item');
 const User = require('./api/User');
 
 const app = express();
+const upload = multer();
 app.use(cors());
-app.use(bodyParser.json());
-
+app.use(bodyParser.json({ limit: '10mb' }));
+app.use(bodyParser.urlencoded({ extended: true, limit: '10mb' }));
 
 // ----------------------- USER ----------------------------
 
@@ -178,10 +180,14 @@ app.get('/user/:userId/list/:listId/items', async (req, res) => {
 });
 
 // Cria um item em uma lista específica de um usuário específico
-app.post('/user/:userId/list/:listId/item', async (req, res) => {
+app.post('/user/:userId/list/:listId/item', upload.single('image'), async (req, res) => {
   const userId = req.params.userId;
   const listId = req.params.listId;
-  const { id, name, value } = req.body;
+  // console.log(req.body.image);
+  const { id, name, value, image } = req.body;
+  // const image = req.file.buffer;
+
+  console.log(name, 'imageee')
 
   try {
     // Verifica se a lista pertence ao usuário antes de criar o item
@@ -193,10 +199,10 @@ app.post('/user/:userId/list/:listId/item', async (req, res) => {
     }
 
     // Insere o novo item no banco de dados associado à lista e ao usuário correspondentes
-    await client.query('INSERT INTO items (id, name, value, list_id) VALUES ($1, $2, $3, $4)', [id, name, value, listId]);
+    await client.query('INSERT INTO items (id, name, value, image, list_id) VALUES ($1, $2, $3, $4, $5)', [id, name, value, image, listId]);
 
     // Cria uma instância da classe Item com os dados do novo item
-    const novoItem = new Item(id, name, value, listId);
+    const novoItem = new Item(id, name, value, image, listId);
 
     res.json(novoItem);
   } catch (error) {
